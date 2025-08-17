@@ -83,7 +83,7 @@ export default function WishlistPage() {
           {wishlistItems.map((item) => (
             <Card key={item.id} className="group relative">
               <CardContent className="p-0">
-                <Link href={`/products/${item.id}`}>
+                <Link href={`/products/${item?.title}`}>
                   <div className="relative overflow-hidden">
                     <Image
                       src={item.image || "/placeholder.svg"}
@@ -96,7 +96,7 @@ export default function WishlistPage() {
                 </Link>
 
                 <div className="p-4">
-                  <Link href={`/products/${item.id}`}>
+                  <Link href={`/products/${item?.title}`}>
                     <h3 className="text-sm font-medium text-gray-900 mb-1 hover:text-gray-600">
                       {item.name}
                     </h3>

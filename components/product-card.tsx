@@ -76,8 +76,6 @@ export function ProductCard({ product, mode = "vertical" }: ProductCardProps) {
     Date.now() - 3 * 24 * 60 * 60 * 1000;
 
   const renderStars = () => {
-    console.log({ product });
-
     if (!+product?.averageStarRating) return;
     return (
       <div className="flex text-yellow-400">
@@ -93,7 +91,7 @@ export function ProductCard({ product, mode = "vertical" }: ProductCardProps) {
       <Card className="group flex flex-col sm:flex-row gap-4 overflow-hidden p-0">
         <Link
           href={{
-            pathname: `/products/${product._id}`,
+            pathname: `/products/${product.title}`,
             query: { product: JSON.stringify(product) },
           }}
           className="flex-shrink-0"
@@ -135,8 +133,7 @@ export function ProductCard({ product, mode = "vertical" }: ProductCardProps) {
             </Badge>
             <Link
               href={{
-                pathname: `/products/${product._id}`,
-                query: { product: JSON.stringify(product) },
+                pathname: `/products/${product?.title}`,
               }}
             >
               <h3 className="text-sm font-medium text-gray-900 mb-1 hover:text-gray-600 line-clamp-2">
@@ -180,8 +177,7 @@ export function ProductCard({ product, mode = "vertical" }: ProductCardProps) {
       <CardContent className="p-0">
         <Link
           href={{
-            pathname: `/products/${product._id}`,
-            query: { product: JSON.stringify(product) },
+            pathname: `/products/${product?.title}`,
           }}
         >
           <div className="relative overflow-hidden">
@@ -243,8 +239,7 @@ export function ProductCard({ product, mode = "vertical" }: ProductCardProps) {
         <div className="p-4">
           <Link
             href={{
-              pathname: `/products/${product._id}`,
-              query: { product: JSON.stringify(product) },
+              pathname: `/products/${product?.title}`,
             }}
           >
             <h3 className="text-sm font-medium text-gray-900 mb-1 hover:text-gray-600 line-clamp-2">

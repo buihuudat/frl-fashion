@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -20,7 +20,7 @@ import { Separator } from "@/components/ui/separator";
 import { Header } from "@/components/header";
 import { useAuth } from "@/contexts/auth-context";
 import { useToast } from "@/hooks/use-toast";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { cancelOrder, getOrder } from "@/services/useProduct";
 
 interface OrderItem {
@@ -276,27 +276,29 @@ export default function OrderDetailPage() {
               {order?.products.map((item) => (
                 <div key={item.productId} className="flex items-center gap-3">
                   <Image
-                    src={item.images?.[0]}
+                    src={item.images?.[0] || "/placeholder.svg"}
                     alt={item?.title}
                     width={60}
                     height={60}
                     className="rounded-md object-cover"
                   />
-                  <div className="flex-1">
-                    <Link href={`/products/${item?._id}`}>
-                      <p className="text-sm font-medium hover:text-gray-700">
-                        {item.title}
+                  <div className="flex flex-col">
+                    <div className="flex-1">
+                      <Link href={`/products/${item?.title}`}>
+                        <p className="text-sm font-medium hover:text-gray-700">
+                          {item.title}
+                        </p>
+                      </Link>
+                      <p className="text-xs text-gray-500">
+                        {item.size && `Size: ${item.size}`}
+                        {item.color && ` | Màu: ${item.color}`}
+                        <span> | SL: {item.quantity}</span>
                       </p>
-                    </Link>
-                    <p className="text-xs text-gray-500">
-                      {item.size && `Size: ${item.size}`}
-                      {item.color && ` | Màu: ${item.color}`}
-                      <span> | SL: {item.quantity}</span>
-                    </p>
+                    </div>
+                    <span className="text-sm font-semibold text-gray-800">
+                      {formatPrice(item.price * item.quantity)}
+                    </span>
                   </div>
-                  <span className="text-sm font-semibold text-gray-800">
-                    {formatPrice(item.price * item.quantity)}
-                  </span>
                 </div>
               ))}
               <Separator className="my-4" />
@@ -320,13 +322,12 @@ export default function OrderDetailPage() {
           {order.status === "delivered" && (
             <Button
               variant="outline"
-              className="border-green-300 text-green-700 hover:bg-green-50"
+              className="border-green-300 text-green-700 hover:bg-green-50 bg-transparent"
             >
               <CheckCircle className="h-4 w-4 mr-2" />
               Xác nhận đã nhận hàng
             </Button>
           )}
-          {/* <Button variant="secondary">Liên hệ hỗ trợ</Button> */}
         </div>
       </div>
     </div>

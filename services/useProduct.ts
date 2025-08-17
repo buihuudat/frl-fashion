@@ -113,19 +113,10 @@ export const getProducts = async (pagination?: PaginationType) => {
 
 // Function to fetch a single product by ID with caching
 export const getProductById = async (id: string) => {
-  const cacheKey = `product_${id}`;
-
   try {
-    const cachedProduct = getCachedData(cacheKey);
-    if (cachedProduct) {
-      console.log(`Returning cached product with ID ${id}`);
-      return cachedProduct;
-    }
-
     const response = await apiClient.get(`/products/${id}`);
     const product = response.data;
 
-    setCachedData(cacheKey, product);
     return product;
   } catch (error) {
     console.error(`Error fetching product with ID ${id}:`, error);

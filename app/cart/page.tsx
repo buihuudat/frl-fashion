@@ -82,7 +82,10 @@ export default function CartPage() {
             {items.map((item) => (
               <Card key={`${item.id}-${item.size}-${item.color}`}>
                 <CardContent className="p-4 flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-4">
-                  <Link href={`/products/${item.id}`} className="flex-shrink-0">
+                  <Link
+                    href={`/products/${item?.title}`}
+                    className="flex-shrink-0"
+                  >
                     <Image
                       src={item.image || "/placeholder.svg"}
                       alt={item.name}
@@ -93,7 +96,7 @@ export default function CartPage() {
                   </Link>
 
                   <div className="flex-1 text-center sm:text-left">
-                    <Link href={`/products/${item.id}`}>
+                    <Link href={`/products/${item?.title}`}>
                       <h3 className="font-medium text-lg mb-1 hover:text-gray-700">
                         {item.name}
                       </h3>

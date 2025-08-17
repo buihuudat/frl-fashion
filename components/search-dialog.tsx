@@ -107,8 +107,7 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
                 <Link
                   key={result._id}
                   href={{
-                    pathname: `/products/${result._id}`,
-                    query: { product: JSON.stringify(result) },
+                    pathname: `/products/${result?.title}`,
                   }}
                   onClick={() => onOpenChange(false)}
                   className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors"

@@ -74,20 +74,13 @@ export default function ProductDetailPage() {
   const [selectedSize, setSelectedSize] = useState("");
 
   useEffect(() => {
-    const productParam = searchParams.get("product");
-    const productState = productParam ? JSON.parse(productParam) : null;
-
-    if (!params) return setIsLoading(false);
     const fetchDataProduct = async () => {
-      await getProductById(params.id).then((res) => {
-        setProduct(res.data);
+      await getProductById(params.title).then((res) => {
+        setProduct(res);
         setIsLoading(false);
       });
     };
-    if (!productState) {
-      fetchDataProduct();
-    } else setProduct(productState);
-    setIsLoading(false);
+    fetchDataProduct();
   }, [params]);
 
   useEffect(() => {
