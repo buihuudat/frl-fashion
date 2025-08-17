@@ -7,16 +7,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useAuth } from "@/contexts/auth-context";
 import { useToast } from "@/hooks/use-toast";
 import { Header } from "@/components/header";
+import { useAuth } from "@/contexts/auth-context";
 
 export default function LoginPage() {
+  const { login } = useAuth();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const { login } = useAuth();
   const { toast } = useToast();
   const router = useRouter();
 
@@ -25,7 +26,7 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      const success = await login(email, password);
+      const success = await login({ username: email, password });
       if (success) {
         toast({
           title: "Đăng nhập thành công",
@@ -36,13 +37,13 @@ export default function LoginPage() {
         toast({
           title: "Đăng nhập thất bại",
           description: "Email hoặc mật khẩu không chính xác.",
-          variant: "destructive",
         });
       }
     } catch (error) {
       toast({
         title: "Có lỗi xảy ra",
-        description: "Vui lòng thử lại sau.",
+        description:
+          error?.response?.data?.errors?.[0]?.msg || "Vui lòng thử lại sau.",
         variant: "destructive",
       });
     } finally {
@@ -62,7 +63,7 @@ export default function LoginPage() {
             </CardTitle>
             <p className="text-sm text-gray-500 mt-1">
               Chào mừng bạn quay trở lại với{" "}
-              <span className="font-medium">Luxe</span>
+              <span className="font-medium">4Star</span>
             </p>
           </CardHeader>
 
@@ -70,11 +71,10 @@ export default function LoginPage() {
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-gray-700 text-sm">
-                  Email
+                  Nhập tài khoản, số điện thoại hoặc Email
                 </Label>
                 <Input
                   id="email"
-                  type="email"
                   placeholder="example@domain.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}

@@ -29,6 +29,7 @@ import { CartSheet } from "./cart-sheet";
 import { AIChat } from "./ai-chat";
 
 import logoImg from "@/public/images/logo.png";
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -71,8 +72,8 @@ export function Header() {
                 <Image
                   alt="logo"
                   src={logoImg}
-                  width={60}
-                  height={20}
+                  width={80}
+                  height={40}
                   className="object-contain"
                 />
               </Link>
@@ -91,12 +92,6 @@ export function Header() {
                 className="text-gray-900 hover:text-gray-600 text-sm font-medium"
               >
                 SẢN PHẨM
-              </Link>
-              <Link
-                href="/stores"
-                className="text-gray-900 hover:text-gray-600 text-sm font-medium"
-              >
-                CỬA HÀNG
               </Link>
               <Link
                 href="/news"
@@ -159,15 +154,16 @@ export function Header() {
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon">
-                      <Image
-                        src={
-                          user.avatar || "/placeholder.svg?height=32&width=32"
-                        }
-                        alt={user.name}
-                        width={32}
-                        height={32}
-                        className="rounded-full"
-                      />
+                      <Avatar>
+                        <AvatarImage
+                          src={user.avatar || "https://github.com/shadcn.png"}
+                          alt={user.name}
+                          width={32}
+                          height={32}
+                          className="rounded-full"
+                        />
+                        <AvatarFallback>DA</AvatarFallback>
+                      </Avatar>
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">

@@ -1,120 +1,231 @@
-'use client'
+"use client";
 
-import Image from "next/image"
-import Link from "next/link"
-import { Heart, Star, ShoppingBag } from 'lucide-react'
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent } from "@/components/ui/card"
-import { useCart } from "@/contexts/cart-context"
-import { useWishlist } from "@/contexts/wishlist-context"
-import { useToast } from "@/hooks/use-toast"
-
-interface Product {
-  id: string
-  name: string
-  price: number
-  originalPrice?: number
-  image: string
-  badge?: string
-  rating?: number
-  reviews?: number
-}
+import Image from "next/image";
+import Link from "next/link";
+import { Heart, Star, ShoppingBag } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { useCart } from "@/contexts/cart-context";
+import { useWishlist } from "@/contexts/wishlist-context";
+import { useToast } from "@/hooks/use-toast";
+import { Carousel, CarouselContent, CarouselItem } from "./ui/carousel";
+import { Product } from "@/types/product";
 
 interface ProductCardProps {
-  product: Product
+  product: Product;
+  mode: "vertical" | "horizontal";
 }
 
-export function ProductCard({ product }: ProductCardProps) {
-  const { addItem } = useCart()
-  const { addItem: addToWishlist, removeItem: removeFromWishlist, isInWishlist } = useWishlist()
-  const { toast } = useToast()
+export function ProductCard({ product, mode = "vertical" }: ProductCardProps) {
+  const { addItem } = useCart();
+  const {
+    addItem: addToWishlist,
+    removeItem: removeFromWishlist,
+    isInWishlist,
+  } = useWishlist();
+  const { toast } = useToast();
 
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND'
-    }).format(price)
-  }
+    return new Intl.NumberFormat("vi-VN", {
+      style: "currency",
+      currency: "VND",
+    }).format(price);
+  };
 
   const handleAddToCart = (e: React.MouseEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     addItem({
-      id: product.id,
-      name: product.name,
+      ...product,
+      id: product._id,
+      name: product.title,
       price: product.price,
-      image: product.image
-    })
+      image: product.images?.[0],
+    });
     toast({
       title: "Đã thêm vào giỏ hàng",
-      description: `${product.name} đã được thêm vào giỏ hàng của bạn.`,
-    })
-  }
+      description: `${product.title} đã được thêm vào giỏ hàng của bạn.`,
+    });
+  };
 
   const handleToggleWishlist = (e: React.MouseEvent) => {
-    e.preventDefault()
-    if (isInWishlist(product.id)) {
-      removeFromWishlist(product.id)
+    e.preventDefault();
+    if (isInWishlist(product._id)) {
+      removeFromWishlist(product._id);
       toast({
         title: "Đã xóa khỏi danh sách yêu thích",
-        description: `${product.name} đã được xóa khỏi danh sách yêu thích.`,
-      })
+        description: `${product.title} đã được xóa khỏi danh sách yêu thích.`,
+      });
     } else {
       addToWishlist({
-        id: product.id,
-        name: product.name,
+        id: product._id,
+        name: product.title,
         price: product.price,
-        image: product.image,
-        originalPrice: product.originalPrice
-      })
+        image: product.images?.[0],
+        originalPrice: product.lastPrice,
+      });
       toast({
         title: "Đã thêm vào danh sách yêu thích",
-        description: `${product.name} đã được thêm vào danh sách yêu thích.`,
-      })
+        description: `${product.title} đã được thêm vào danh sách yêu thích.`,
+      });
     }
-  }
+  };
 
-  return (
-    <Card className="group relative">
-      <CardContent className="p-0">
-        <Link href={`/products/${product.id}`}>
-          <div className="relative overflow-hidden">
+  const isNewProduct =
+    new Date(product.createdAt).getTime() >=
+    Date.now() - 3 * 24 * 60 * 60 * 1000;
+
+  const renderStars = () => {
+    console.log({ product });
+
+    if (!+product?.averageStarRating) return;
+    return (
+      <div className="flex text-yellow-400">
+        {[...Array(Math.round(product?.averageStarRating))].map((_, i) => (
+          <Star key={i} className="h-3 w-3 fill-current" />
+        ))}
+      </div>
+    );
+  };
+
+  if (mode === "horizontal") {
+    return (
+      <Card className="group flex flex-col sm:flex-row gap-4 overflow-hidden p-0">
+        <Link
+          href={{
+            pathname: `/products/${product._id}`,
+            query: { product: JSON.stringify(product) },
+          }}
+          className="flex-shrink-0"
+        >
+          <div className="relative w-full sm:w-56 h-56 sm:h-auto overflow-hidden">
             <Image
-              src={product.image || "/placeholder.svg"}
-              alt={product.name}
-              width={300}
-              height={400}
-              className="object-cover w-full h-80 group-hover:scale-105 transition-transform duration-300"
+              src={product.images?.[0]}
+              alt={product.title}
+              width={224}
+              height={224}
+              className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105"
             />
-            {product.badge && (
-              <Badge 
-                className={`absolute top-2 left-2 ${
-                  product.badge === 'SOLD OUT' 
-                    ? 'bg-gray-800 text-white' 
-                    : product.badge === 'SALE'
-                    ? 'bg-red-600 text-white'
-                    : 'bg-green-600 text-white'
-                }`}
-              >
-                {product.badge}
+            {isNewProduct && (
+              <Badge className="absolute top-2 left-2 bg-green-600 text-white">
+                NEW
               </Badge>
             )}
-            
+            <Button
+              variant="ghost"
+              size="icon"
+              className={`absolute top-2 right-2 bg-white/80 hover:bg-white ${
+                isInWishlist(product._id) ? "text-red-500" : "text-gray-600"
+              }`}
+              onClick={handleToggleWishlist}
+            >
+              <Heart
+                className={`h-4 w-4 ${
+                  isInWishlist(product._id) ? "fill-current" : ""
+                }`}
+              />
+            </Button>
+          </div>
+        </Link>
+
+        <div className="p-4 flex flex-col justify-between flex-1">
+          <div>
+            <Badge className="mb-2" variant="outline">
+              {product?.category}
+            </Badge>
+            <Link
+              href={{
+                pathname: `/products/${product._id}`,
+                query: { product: JSON.stringify(product) },
+              }}
+            >
+              <h3 className="text-sm font-medium text-gray-900 mb-1 hover:text-gray-600 line-clamp-2">
+                {product.title}
+              </h3>
+            </Link>
+
+            <div className="flex items-center space-x-2 mb-2">
+              <span className="text-lg font-semibold text-gray-900">
+                {formatPrice(product.lastPrice)}
+              </span>
+              {product.price && (
+                <span className="text-sm text-gray-500 line-through">
+                  {formatPrice(product.price)}
+                </span>
+              )}
+            </div>
+
+            {!!product.averageStarRating && (
+              <div className="flex items-center space-x-1">
+                {renderStars()}
+                <span className="text-xs text-gray-500">
+                  ({product.comments.length} đánh giá)
+                </span>
+              </div>
+            )}
+          </div>
+
+          <Button className="mt-4 w-full sm:w-auto" onClick={handleAddToCart}>
+            <ShoppingBag className="h-4 w-4 mr-2" />
+            Thêm vào giỏ
+          </Button>
+        </div>
+      </Card>
+    );
+  }
+
+  // Fallback to vertical mode (original)
+  return (
+    <Card className="group relative p-0 overflow-hidden">
+      <CardContent className="p-0">
+        <Link
+          href={{
+            pathname: `/products/${product._id}`,
+            query: { product: JSON.stringify(product) },
+          }}
+        >
+          <div className="relative overflow-hidden">
+            <Carousel>
+              <CarouselContent>
+                {product?.images?.map((item) => (
+                  <CarouselItem key={item}>
+                    <Image
+                      src={item}
+                      alt={product.title}
+                      width={300}
+                      height={200}
+                      className="object-cover w-full h-60 group-hover:scale-105 transition-transform duration-300 object-top"
+                    />
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+            </Carousel>
+
+            {isNewProduct && (
+              <Badge className="absolute top-2 left-2 bg-green-600 text-white">
+                NEW
+              </Badge>
+            )}
+
             {/* Wishlist Button */}
             <Button
               variant="ghost"
               size="icon"
               className={`absolute top-2 right-2 bg-white/80 hover:bg-white ${
-                isInWishlist(product.id) ? 'text-red-500' : 'text-gray-600'
+                isInWishlist(product._id) ? "text-red-500" : "text-gray-600"
               }`}
               onClick={handleToggleWishlist}
             >
-              <Heart className={`h-4 w-4 ${isInWishlist(product.id) ? 'fill-current' : ''}`} />
+              <Heart
+                className={`h-4 w-4 ${
+                  isInWishlist(product._id) ? "fill-current" : ""
+                }`}
+              />
             </Button>
 
             {/* Quick Add to Cart */}
             <div className="absolute bottom-2 left-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              <Button 
+              <Button
                 className="w-full bg-white text-black hover:bg-gray-100"
                 onClick={handleAddToCart}
               >
@@ -124,44 +235,44 @@ export function ProductCard({ product }: ProductCardProps) {
             </div>
           </div>
         </Link>
-        
+
+        <Badge className="m-2 mb-0" variant={"outline"}>
+          {product?.category}
+        </Badge>
+
         <div className="p-4">
-          <Link href={`/products/${product.id}`}>
-            <h3 className="text-sm font-medium text-gray-900 mb-1 hover:text-gray-600">
-              {product.name}
+          <Link
+            href={{
+              pathname: `/products/${product._id}`,
+              query: { product: JSON.stringify(product) },
+            }}
+          >
+            <h3 className="text-sm font-medium text-gray-900 mb-1 hover:text-gray-600 line-clamp-2">
+              {product.title}
             </h3>
           </Link>
-          
+
           <div className="flex items-center space-x-2 mb-2">
             <span className="text-lg font-semibold text-gray-900">
-              {formatPrice(product.price)}
+              {formatPrice(product.lastPrice)}
             </span>
-            {product.originalPrice && (
+            {product.price && (
               <span className="text-sm text-gray-500 line-through">
-                {formatPrice(product.originalPrice)}
+                {formatPrice(product.price)}
               </span>
             )}
           </div>
 
-          {product.rating && (
+          {!!product.averageStarRating && (
             <div className="flex items-center space-x-1">
-              <div className="flex text-yellow-400">
-                {[...Array(5)].map((_, i) => (
-                  <Star 
-                    key={i} 
-                    className={`h-3 w-3 ${
-                      i < Math.floor(product.rating!) ? 'fill-current' : ''
-                    }`} 
-                  />
-                ))}
-              </div>
+              {renderStars()}
               <span className="text-xs text-gray-500">
-                ({product.reviews} đánh giá)
+                ({product.comments.length} đánh giá)
               </span>
             </div>
           )}
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }

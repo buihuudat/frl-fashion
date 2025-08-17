@@ -1,200 +1,169 @@
-'use client'
+"use client";
 
-import { useState, useEffect } from "react"
-import { Filter, Grid, List, ChevronDown } from 'lucide-react'
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
-import { Badge } from "@/components/ui/badge"
-import { Header } from "@/components/header"
-import { ProductCard } from "@/components/product-card"
+import { useState, useEffect } from "react";
+import { Filter, Grid, List, ChevronDown } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import { Badge } from "@/components/ui/badge";
+import { Header } from "@/components/header";
+import { ProductCard } from "@/components/product-card";
+import { getProducts } from "@/services/useProduct";
+import { getCategory } from "@/services/useCategory";
+import { getTags } from "@/services/useTags";
+import { Product } from "@/types/product";
 
-interface Product {
-  id: string
-  name: string
-  price: number
-  originalPrice?: number
-  image: string
-  category: string
-  brand: string
-  rating: number
-  reviews: number
-  colors: string[]
-  sizes: string[]
-  isNew?: boolean
-  isSale?: boolean
-}
+const numberOfProductShow: number = 8;
 
 export default function ProductsPage() {
-  const [products, setProducts] = useState<Product[]>([])
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>([])
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
-  const [sortBy, setSortBy] = useState('newest')
+  const [products, setProducts] = useState<Product[]>([]);
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [sortBy, setSortBy] = useState("newest");
+  const [searchQuery, setSearchQuery] = useState("");
+
   const [filters, setFilters] = useState({
     categories: [] as string[],
     brands: [] as string[],
     priceRange: [0, 5000000],
     colors: [] as string[],
-    sizes: [] as string[]
-  })
-  const [searchQuery, setSearchQuery] = useState('')
+    sizes: [] as string[],
+  });
 
-  const mockProducts: Product[] = [
-    {
-      id: "1",
-      name: "Áo sơ mi lụa cao cấp",
-      price: 1200000,
-      originalPrice: 1500000,
-      image: "/placeholder.svg?height=400&width=300",
-      category: "Áo sơ mi",
-      brand: "Luxe Collection",
-      rating: 4.8,
-      reviews: 124,
-      colors: ["Trắng", "Đen", "Xanh navy"],
-      sizes: ["S", "M", "L", "XL"],
-      isSale: true
-    },
-    {
-      id: "2",
-      name: "Váy dạ hội sang trọng",
-      price: 2500000,
-      image: "/placeholder.svg?height=400&width=300",
-      category: "Váy",
-      brand: "Elegant Line",
-      rating: 4.9,
-      reviews: 89,
-      colors: ["Đen", "Đỏ burgundy", "Xanh navy"],
-      sizes: ["XS", "S", "M", "L"],
-      isNew: true
-    },
-    {
-      id: "3",
-      name: "Áo khoác blazer nữ",
-      price: 1800000,
-      originalPrice: 2200000,
-      image: "/placeholder.svg?height=400&width=300",
-      category: "Áo khoác",
-      brand: "Professional",
-      rating: 4.7,
-      reviews: 156,
-      colors: ["Đen", "Xám", "Camel"],
-      sizes: ["S", "M", "L", "XL"],
-      isSale: true
-    },
-    {
-      id: "4",
-      name: "Chân váy midi thanh lịch",
-      price: 950000,
-      image: "/placeholder.svg?height=400&width=300",
-      category: "Váy",
-      brand: "Classic Style",
-      rating: 4.6,
-      reviews: 78,
-      colors: ["Đen", "Trắng", "Hồng pastel"],
-      sizes: ["XS", "S", "M", "L"]
-    },
-    {
-      id: "5",
-      name: "Áo len cashmere",
-      price: 3200000,
-      image: "/placeholder.svg?height=400&width=300",
-      category: "Áo len",
-      brand: "Luxury Knits",
-      rating: 4.9,
-      reviews: 67,
-      colors: ["Kem", "Xám", "Camel"],
-      sizes: ["S", "M", "L"],
-      isNew: true
-    },
-    {
-      id: "6",
-      name: "Quần tây công sở",
-      price: 1100000,
-      image: "/placeholder.svg?height=400&width=300",
-      category: "Quần",
-      brand: "Office Wear",
-      rating: 4.5,
-      reviews: 92,
-      colors: ["Đen", "Xám", "Xanh navy"],
-      sizes: ["S", "M", "L", "XL"]
-    }
-  ]
-
-  const categories = ["Áo sơ mi", "Váy", "Áo khoác", "Áo len", "Quần", "Phụ kiện"]
-  const brands = ["Luxe Collection", "Elegant Line", "Professional", "Classic Style", "Luxury Knits", "Office Wear"]
-  const colors = ["Trắng", "Đen", "Xám", "Xanh navy", "Đỏ burgundy", "Hồng pastel", "Kem", "Camel"]
-  const sizes = ["XS", "S", "M", "L", "XL", "XXL"]
+  const [categories, setCategories] = useState<string[]>([]);
+  const [brands, setBrands] = useState<string[]>([]);
+  const [colors, setColors] = useState<string[]>([]);
+  const [sizes, setSizes] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [totalProducts, setTotalProducts] = useState(0);
 
   useEffect(() => {
-    setProducts(mockProducts)
-    setFilteredProducts(mockProducts)
-  }, [])
+    const fetchData = async () => {
+      try {
+        const [productRes, categoryRes, tagRes] = await Promise.all([
+          getProducts(),
+          getCategory(),
+          getTags(),
+        ]);
+
+        setTotalProducts(productRes?.totalProducts || 0);
+        setProducts(productRes?.products.length ? productRes?.products : []);
+        setCategories(categoryRes.map((cat: any) => cat.name));
+        setSizes(tagRes?.map((item) => item?.name));
+      } catch (error) {
+        console.error("Failed to fetch product data", error);
+        setProducts([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   useEffect(() => {
-    let filtered = products.filter(product => {
-      const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                           product.category.toLowerCase().includes(searchQuery.toLowerCase())
-      
-      const matchesCategory = filters.categories.length === 0 || filters.categories.includes(product.category)
-      const matchesBrand = filters.brands.length === 0 || filters.brands.includes(product.brand)
-      const matchesPrice = product.price >= filters.priceRange[0] && product.price <= filters.priceRange[1]
-      const matchesColor = filters.colors.length === 0 || filters.colors.some(color => product.colors.includes(color))
-      const matchesSize = filters.sizes.length === 0 || filters.sizes.some(size => product.sizes.includes(size))
+    let filtered = products.filter((product) => {
+      const matchesSearch =
+        product.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        product.category.toLowerCase().includes(searchQuery.toLowerCase());
 
-      return matchesSearch && matchesCategory && matchesBrand && matchesPrice && matchesColor && matchesSize
-    })
+      const matchesCategory =
+        filters.categories.length === 0 ||
+        filters.categories.includes(product.category);
+      const matchesBrand =
+        filters.brands.length === 0 || filters.brands.includes(product.brand);
+      const matchesPrice =
+        product.price >= filters.priceRange[0] &&
+        product.price <= filters.priceRange[1];
+      const matchesColor =
+        filters.colors.length === 0 ||
+        filters.colors.some((color) => product.colors.includes(color));
+      const matchesSize =
+        filters.sizes.length === 0 ||
+        filters.sizes.some((size) =>
+          product.tags?.some((p) => p?.name === size)
+        );
 
-    // Sort products
+      return (
+        matchesSearch &&
+        matchesCategory &&
+        matchesBrand &&
+        matchesPrice &&
+        matchesColor &&
+        matchesSize
+      );
+    });
+
     switch (sortBy) {
-      case 'price-low':
-        filtered.sort((a, b) => a.price - b.price)
-        break
-      case 'price-high':
-        filtered.sort((a, b) => b.price - a.price)
-        break
-      case 'rating':
-        filtered.sort((a, b) => b.rating - a.rating)
-        break
-      case 'newest':
-      default:
-        filtered.sort((a, b) => (b.isNew ? 1 : 0) - (a.isNew ? 1 : 0))
-        break
+      case "price-low":
+        filtered.sort((a, b) => a.price - b.price);
+        break;
+      case "price-high":
+        filtered.sort((a, b) => b.price - a.price);
+        break;
+        break;
     }
 
-    setFilteredProducts(filtered)
-  }, [products, filters, sortBy, searchQuery])
+    setFilteredProducts(filtered);
+  }, [products, filters, sortBy, searchQuery]);
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND'
-    }).format(price)
-  }
+  useEffect(() => {
+    const fetchProducts = async () => {
+      const products = await getProducts({
+        page: currentPage,
+        perPage: numberOfProductShow,
+      });
+      setProducts(products?.products.length ? products?.products : []);
+    };
+    fetchProducts;
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [currentPage]);
 
-  const handleFilterChange = (type: string, value: string, checked: boolean) => {
-    setFilters(prev => ({
+  const countPage = Math.ceil(totalProducts / numberOfProductShow);
+
+  const handleFilterChange = (
+    type: string,
+    value: string,
+    checked: boolean
+  ) => {
+    setFilters((prev) => ({
       ...prev,
-      [type]: checked 
-        ? [...prev[type as keyof typeof prev] as string[], value]
-        : (prev[type as keyof typeof prev] as string[]).filter(item => item !== value)
-    }))
-  }
+      [type]: checked
+        ? [...(prev[type as keyof typeof prev] as string[]), value]
+        : (prev[type as keyof typeof prev] as string[]).filter(
+            (item) => item !== value
+          ),
+    }));
+  };
 
   const FilterContent = () => (
     <div className="space-y-6">
       <div>
         <h3 className="font-semibold mb-3">Danh mục</h3>
         <div className="space-y-2">
-          {categories.map(category => (
+          {categories.map((category) => (
             <div key={category} className="flex items-center space-x-2">
               <Checkbox
                 id={`category-${category}`}
                 checked={filters.categories.includes(category)}
-                onCheckedChange={(checked) => 
-                  handleFilterChange('categories', category, checked as boolean)
+                onCheckedChange={(checked) =>
+                  handleFilterChange("categories", category, checked as boolean)
                 }
               />
               <Label htmlFor={`category-${category}`} className="text-sm">
@@ -208,13 +177,13 @@ export default function ProductsPage() {
       <div>
         <h3 className="font-semibold mb-3">Thương hiệu</h3>
         <div className="space-y-2">
-          {brands.map(brand => (
+          {brands.map((brand) => (
             <div key={brand} className="flex items-center space-x-2">
               <Checkbox
                 id={`brand-${brand}`}
                 checked={filters.brands.includes(brand)}
-                onCheckedChange={(checked) => 
-                  handleFilterChange('brands', brand, checked as boolean)
+                onCheckedChange={(checked) =>
+                  handleFilterChange("brands", brand, checked as boolean)
                 }
               />
               <Label htmlFor={`brand-${brand}`} className="text-sm">
@@ -233,10 +202,15 @@ export default function ProductsPage() {
               type="number"
               placeholder="Từ"
               value={filters.priceRange[0]}
-              onChange={(e) => setFilters(prev => ({
-                ...prev,
-                priceRange: [parseInt(e.target.value) || 0, prev.priceRange[1]]
-              }))}
+              onChange={(e) =>
+                setFilters((prev) => ({
+                  ...prev,
+                  priceRange: [
+                    parseInt(e.target.value) || 0,
+                    prev.priceRange[1],
+                  ],
+                }))
+              }
               className="text-sm"
             />
             <span>-</span>
@@ -244,10 +218,15 @@ export default function ProductsPage() {
               type="number"
               placeholder="Đến"
               value={filters.priceRange[1]}
-              onChange={(e) => setFilters(prev => ({
-                ...prev,
-                priceRange: [prev.priceRange[0], parseInt(e.target.value) || 5000000]
-              }))}
+              onChange={(e) =>
+                setFilters((prev) => ({
+                  ...prev,
+                  priceRange: [
+                    prev.priceRange[0],
+                    parseInt(e.target.value) || 5000000,
+                  ],
+                }))
+              }
               className="text-sm"
             />
           </div>
@@ -257,13 +236,13 @@ export default function ProductsPage() {
       <div>
         <h3 className="font-semibold mb-3">Màu sắc</h3>
         <div className="grid grid-cols-2 gap-2">
-          {colors.map(color => (
+          {colors.map((color) => (
             <div key={color} className="flex items-center space-x-2">
               <Checkbox
                 id={`color-${color}`}
                 checked={filters.colors.includes(color)}
-                onCheckedChange={(checked) => 
-                  handleFilterChange('colors', color, checked as boolean)
+                onCheckedChange={(checked) =>
+                  handleFilterChange("colors", color, checked as boolean)
                 }
               />
               <Label htmlFor={`color-${color}`} className="text-sm">
@@ -277,13 +256,13 @@ export default function ProductsPage() {
       <div>
         <h3 className="font-semibold mb-3">Kích thước</h3>
         <div className="flex flex-wrap gap-2">
-          {sizes.map(size => (
+          {sizes.map((size) => (
             <div key={size} className="flex items-center space-x-2">
               <Checkbox
                 id={`size-${size}`}
                 checked={filters.sizes.includes(size)}
-                onCheckedChange={(checked) => 
-                  handleFilterChange('sizes', size, checked as boolean)
+                onCheckedChange={(checked) =>
+                  handleFilterChange("sizes", size, checked as boolean)
                 }
               />
               <Label htmlFor={`size-${size}`} className="text-sm">
@@ -294,12 +273,12 @@ export default function ProductsPage() {
         </div>
       </div>
     </div>
-  )
+  );
 
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
-      
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
@@ -361,24 +340,28 @@ export default function ProductsPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="newest">Mới nhất</SelectItem>
-                      <SelectItem value="price-low">Giá thấp đến cao</SelectItem>
-                      <SelectItem value="price-high">Giá cao đến thấp</SelectItem>
+                      <SelectItem value="price-low">
+                        Giá thấp đến cao
+                      </SelectItem>
+                      <SelectItem value="price-high">
+                        Giá cao đến thấp
+                      </SelectItem>
                       <SelectItem value="rating">Đánh giá cao nhất</SelectItem>
                     </SelectContent>
                   </Select>
 
                   <div className="flex border rounded-lg">
                     <Button
-                      variant={viewMode === 'grid' ? 'default' : 'ghost'}
+                      variant={viewMode === "grid" ? "default" : "ghost"}
                       size="sm"
-                      onClick={() => setViewMode('grid')}
+                      onClick={() => setViewMode("grid")}
                     >
                       <Grid className="h-4 w-4" />
                     </Button>
                     <Button
-                      variant={viewMode === 'list' ? 'default' : 'ghost'}
+                      variant={viewMode === "list" ? "default" : "ghost"}
                       size="sm"
-                      onClick={() => setViewMode('list')}
+                      onClick={() => setViewMode("list")}
                     >
                       <List className="h-4 w-4" />
                     </Button>
@@ -388,31 +371,54 @@ export default function ProductsPage() {
             </div>
 
             {/* Active Filters */}
-            {(filters.categories.length > 0 || filters.brands.length > 0 || filters.colors.length > 0 || filters.sizes.length > 0) && (
+            {(filters.categories.length > 0 ||
+              filters.brands.length > 0 ||
+              filters.colors.length > 0 ||
+              filters.sizes.length > 0) && (
               <div className="bg-white p-4 rounded-lg shadow-sm mb-6">
                 <div className="flex items-center space-x-2 flex-wrap gap-2">
-                  <span className="text-sm font-medium">Bộ lọc đang áp dụng:</span>
-                  {filters.categories.map(category => (
-                    <Badge key={category} variant="secondary" className="cursor-pointer"
-                           onClick={() => handleFilterChange('categories', category, false)}>
+                  <span className="text-sm font-medium">
+                    Bộ lọc đang áp dụng:
+                  </span>
+                  {filters.categories.map((category) => (
+                    <Badge
+                      key={category}
+                      variant="secondary"
+                      className="cursor-pointer"
+                      onClick={() =>
+                        handleFilterChange("categories", category, false)
+                      }
+                    >
                       {category} ×
                     </Badge>
                   ))}
-                  {filters.brands.map(brand => (
-                    <Badge key={brand} variant="secondary" className="cursor-pointer"
-                           onClick={() => handleFilterChange('brands', brand, false)}>
+                  {filters.brands.map((brand) => (
+                    <Badge
+                      key={brand}
+                      variant="secondary"
+                      className="cursor-pointer"
+                      onClick={() => handleFilterChange("brands", brand, false)}
+                    >
                       {brand} ×
                     </Badge>
                   ))}
-                  {filters.colors.map(color => (
-                    <Badge key={color} variant="secondary" className="cursor-pointer"
-                           onClick={() => handleFilterChange('colors', color, false)}>
+                  {filters.colors.map((color) => (
+                    <Badge
+                      key={color}
+                      variant="secondary"
+                      className="cursor-pointer"
+                      onClick={() => handleFilterChange("colors", color, false)}
+                    >
                       {color} ×
                     </Badge>
                   ))}
-                  {filters.sizes.map(size => (
-                    <Badge key={size} variant="secondary" className="cursor-pointer"
-                           onClick={() => handleFilterChange('sizes', size, false)}>
+                  {filters.sizes.map((size) => (
+                    <Badge
+                      key={size}
+                      variant="secondary"
+                      className="cursor-pointer"
+                      onClick={() => handleFilterChange("sizes", size, false)}
+                    >
                       {size} ×
                     </Badge>
                   ))}
@@ -421,55 +427,83 @@ export default function ProductsPage() {
             )}
 
             {/* Products Grid */}
-            {filteredProducts.length === 0 ? (
+            {loading ? (
+              <div
+                className={`grid gap-6 ${
+                  viewMode === "grid"
+                    ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+                    : "grid-cols-1"
+                }`}
+              >
+                {[...Array(8)].map((_, index) => (
+                  <div
+                    key={index}
+                    className="animate-pulse space-y-4 bg-white p-4 rounded-lg shadow-sm"
+                  >
+                    <div className="bg-gray-200 h-48 w-full rounded-md" />
+                    <div className="h-4 bg-gray-200 rounded w-3/4" />
+                    <div className="h-4 bg-gray-200 rounded w-1/2" />
+                  </div>
+                ))}
+              </div>
+            ) : filteredProducts.length === 0 ? (
               <div className="text-center py-12">
-                <p className="text-gray-500 mb-4">Không tìm thấy sản phẩm nào</p>
-                <Button onClick={() => {
-                  setFilters({
-                    categories: [],
-                    brands: [],
-                    priceRange: [0, 5000000],
-                    colors: [],
-                    sizes: []
-                  })
-                  setSearchQuery('')
-                }}>
+                <p className="text-gray-500 mb-4">
+                  Không tìm thấy sản phẩm nào
+                </p>
+                <Button
+                  onClick={() => {
+                    setFilters({
+                      categories: [],
+                      brands: [],
+                      priceRange: [0, 5000000],
+                      colors: [],
+                      sizes: [],
+                    });
+                    setSearchQuery("");
+                  }}
+                >
                   Xóa bộ lọc
                 </Button>
               </div>
             ) : (
-              <div className={`grid gap-6 ${
-                viewMode === 'grid' 
-                  ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' 
-                  : 'grid-cols-1'
-              }`}>
-                {filteredProducts.map(product => (
-                  <div key={product.id} className="relative">
-                    <ProductCard product={product} />
-                    {product.isNew && (
-                      <Badge className="absolute top-2 left-2 bg-green-600 text-white">
-                        Mới
-                      </Badge>
-                    )}
-                    {product.isSale && (
-                      <Badge className="absolute top-2 right-12 bg-red-600 text-white">
-                        Sale
-                      </Badge>
-                    )}
+              <div
+                className={`grid gap-6 ${
+                  viewMode === "grid"
+                    ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+                    : "grid-cols-1"
+                }`}
+              >
+                {filteredProducts.map((product) => (
+                  <div key={product._id} className="relative">
+                    <ProductCard
+                      product={product}
+                      mode={viewMode === "grid" ? "vertical" : "horizontal"}
+                    />
                   </div>
                 ))}
               </div>
             )}
 
             {/* Pagination */}
-            {filteredProducts.length > 0 && (
+            {totalProducts > 0 && (
               <div className="flex justify-center mt-12">
                 <div className="flex space-x-2">
-                  <Button variant="outline" disabled>Trước</Button>
-                  <Button variant="default">1</Button>
-                  <Button variant="outline">2</Button>
-                  <Button variant="outline">3</Button>
-                  <Button variant="outline">Sau</Button>
+                  <Button variant="outline" disabled={currentPage === 1}>
+                    Trước
+                  </Button>
+                  {Array.from({ length: countPage }, (_, i) => (
+                    <Button
+                      key={i}
+                      variant={currentPage === i + 1 ? "default" : "outline"}
+                      onClick={() => setCurrentPage(i + 1)}
+                    >
+                      {i + 1}
+                    </Button>
+                  ))}
+                  <Button variant="outline" disabled={countPage === 1}>
+                    Sau
+                  </Button>
                 </div>
               </div>
             )}
@@ -477,5 +511,5 @@ export default function ProductsPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }

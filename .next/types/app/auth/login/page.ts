@@ -1,4 +1,4 @@
-// File: /Users/buihuudat/Desktop/luxe-fashion-site/app/auth/login/page.tsx
+// File: /Users/buihuudat/Desktop/frl/4star_web_ecommerce/luxe-fashion-site/app/auth/login/page.tsx
 import * as entry from '../../../../../app/auth/login/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

@@ -1,4 +1,4 @@
-// File: /Users/buihuudat/Desktop/luxe-fashion-site/app/layout.tsx
+// File: /Users/buihuudat/Desktop/frl/4star_web_ecommerce/luxe-fashion-site/app/layout.tsx
 import * as entry from '../../../app/layout.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

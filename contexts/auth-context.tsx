@@ -1,122 +1,107 @@
-'use client'
+"use client";
 
-import React, { createContext, useContext, useState, useEffect } from 'react'
+import { apiClient } from "@/services";
+import { RegisterType } from "@/types/authType";
+import React, { createContext, useContext, useState, useEffect } from "react";
 
-interface User {
-  id: string
-  name: string
-  email: string
-  avatar?: string
-  phone?: string
-  address?: string
+export interface User {
+  _id: string;
+  fullname: {
+    firstname: string;
+    lastname: string;
+  };
+  email: string;
+  phone: string;
+  username: string;
+  password: string;
+  avatar: string;
+  verifyEmail: boolean;
+  verifyPhone: boolean;
+  createdAt: string; // ISO date string
+  updatedAt: string; // ISO date string
+  addressText: string;
+  __v: number;
 }
 
 interface AuthContextType {
-  user: User | null
-  login: (email: string, password: string) => Promise<boolean>
-  register: (name: string, email: string, password: string) => Promise<boolean>
-  logout: () => void
-  updateProfile: (data: Partial<User>) => Promise<boolean>
-  isLoading: boolean
+  user: User | null;
+  login: (username: string, password: string) => Promise<any>;
+  register: (props: RegisterType) => Promise<any>;
+  logout: () => void;
+  updateProfile: (data: Partial<User>) => Promise<boolean>;
+  isLoading: boolean;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined)
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     // Kiểm tra localStorage để khôi phục session
-    const savedUser = localStorage.getItem('user')
+    const savedUser = localStorage.getItem("USER_DATA");
     if (savedUser) {
-      setUser(JSON.parse(savedUser))
+      setUser(JSON.parse(savedUser));
     }
-    setIsLoading(false)
-  }, [])
+    setIsLoading(false);
+  }, []);
 
-  const login = async (email: string, password: string): Promise<boolean> => {
-    setIsLoading(true)
-    try {
-      // Mô phỏng API call
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      const mockUser: User = {
-        id: '1',
-        name: 'Nguyễn Văn A',
-        email: email,
-        avatar: '/placeholder.svg?height=100&width=100'
-      }
-      
-      setUser(mockUser)
-      localStorage.setItem('user', JSON.stringify(mockUser))
-      return true
-    } catch (error) {
-      return false
-    } finally {
-      setIsLoading(false)
-    }
-  }
+  const login = async (payload: { username: string; password: string }) => {
+    const data = await apiClient.post("/auth/login", payload);
+    localStorage.setItem("USER_TOKEN", JSON.stringify(data?.data?.token));
+    localStorage.setItem("USER_DATA", JSON.stringify(data?.data?.user));
+    setUser(data?.data?.user);
+    return data;
+  };
 
-  const register = async (name: string, email: string, password: string): Promise<boolean> => {
-    setIsLoading(true)
-    try {
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      const mockUser: User = {
-        id: Date.now().toString(),
-        name,
-        email,
-        avatar: '/placeholder.svg?height=100&width=100'
-      }
-      
-      setUser(mockUser)
-      localStorage.setItem('user', JSON.stringify(mockUser))
-      return true
-    } catch (error) {
-      return false
-    } finally {
-      setIsLoading(false)
-    }
-  }
+  const register = async (payload: RegisterType) => {
+    const data = await apiClient.post("/auth/register", payload);
+    localStorage.setItem("USER_TOKEN", JSON.stringify(data?.data?.token));
+    localStorage.setItem("USER_DATA", JSON.stringify(data?.data?.user));
+    return data;
+  };
 
   const logout = () => {
-    setUser(null)
-    localStorage.removeItem('user')
-  }
+    setUser(null);
+    localStorage.removeItem("USER_DATA");
+    localStorage.removeItem("USER_TOKEN");
+  };
 
   const updateProfile = async (data: Partial<User>): Promise<boolean> => {
-    if (!user) return false
-    
+    if (!user) return false;
+
     try {
-      await new Promise(resolve => setTimeout(resolve, 500))
-      const updatedUser = { ...user, ...data }
-      setUser(updatedUser)
-      localStorage.setItem('user', JSON.stringify(updatedUser))
-      return true
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      const updatedUser = { ...user, ...data };
+      setUser(updatedUser);
+      localStorage.setItem("USER_DATA", JSON.stringify(updatedUser));
+      return true;
     } catch (error) {
-      return false
+      return false;
     }
-  }
+  };
 
   return (
-    <AuthContext.Provider value={{
-      user,
-      login,
-      register,
-      logout,
-      updateProfile,
-      isLoading
-    }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        login,
+        register,
+        logout,
+        updateProfile,
+        isLoading,
+      }}
+    >
       {children}
     </AuthContext.Provider>
-  )
+  );
 }
 
 export function useAuth() {
-  const context = useContext(AuthContext)
+  const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider')
+    throw new Error("useAuth must be used within an AuthProvider");
   }
-  return context
+  return context;
 }

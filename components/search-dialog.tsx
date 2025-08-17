@@ -1,84 +1,74 @@
-'use client'
+"use client";
 
-import { useState, useEffect } from "react"
-import { Search, X } from 'lucide-react'
+import { useState, useEffect } from "react";
+import { Search, X } from "lucide-react";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import Image from "next/image"
-import Link from "next/link"
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import Image from "next/image";
+import Link from "next/link";
+import { getProducts } from "@/services/useProduct";
+import { Product } from "@/types/product";
 
 interface SearchResult {
-  id: string
-  name: string
-  price: number
-  image: string
-  category: string
+  id: string;
+  name: string;
+  price: number;
+  image: string;
+  category: string;
 }
 
 interface SearchDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
 export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
-  const [query, setQuery] = useState("")
-  const [results, setResults] = useState<SearchResult[]>([])
-  const [isLoading, setIsLoading] = useState(false)
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const mockResults: SearchResult[] = [
-    {
-      id: "1",
-      name: "Áo sơ mi lụa cao cấp",
-      price: 1200000,
-      image: "/placeholder.svg?height=80&width=80",
-      category: "Áo sơ mi"
-    },
-    {
-      id: "2",
-      name: "Váy dạ hội sang trọng",
-      price: 2500000,
-      image: "/placeholder.svg?height=80&width=80",
-      category: "Váy"
-    },
-    {
-      id: "3",
-      name: "Áo khoác blazer nữ",
-      price: 1800000,
-      image: "/placeholder.svg?height=80&width=80",
-      category: "Áo khoác"
-    }
-  ]
+  const [products, setProducts] = useState<Product[] | null>(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const data = await getProducts();
+      setProducts(data?.products);
+    };
+
+    fetchData();
+  }, [open]);
 
   useEffect(() => {
     if (query.length > 2) {
-      setIsLoading(true)
+      setIsLoading(true);
       const timer = setTimeout(() => {
-        const filtered = mockResults.filter(item =>
-          item.name.toLowerCase().includes(query.toLowerCase()) ||
-          item.category.toLowerCase().includes(query.toLowerCase())
-        )
-        setResults(filtered)
-        setIsLoading(false)
-      }, 500)
+        const filtered = products?.filter(
+          (item) =>
+            item.title.toLowerCase().includes(query.toLowerCase()) ||
+            item.category.toLowerCase().includes(query.toLowerCase())
+        );
+        setResults(filtered);
+        setIsLoading(false);
+      }, 500);
 
-      return () => clearTimeout(timer)
+      return () => clearTimeout(timer);
     } else {
-      setResults([])
+      setResults([]);
     }
-  }, [query])
+  }, [query]);
 
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND'
-    }).format(price)
-  }
+    return new Intl.NumberFormat("vi-VN", {
+      style: "currency",
+      currency: "VND",
+    }).format(price);
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -86,7 +76,7 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
         <DialogHeader>
           <DialogTitle>Tìm kiếm sản phẩm</DialogTitle>
         </DialogHeader>
-        
+
         <div className="relative">
           <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
           <Input
@@ -115,23 +105,28 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
             <div className="space-y-2">
               {results.map((result) => (
                 <Link
-                  key={result.id}
-                  href={`/products/${result.id}`}
+                  key={result._id}
+                  href={{
+                    pathname: `/products/${result._id}`,
+                    query: { product: JSON.stringify(result) },
+                  }}
                   onClick={() => onOpenChange(false)}
                   className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors"
                 >
                   <Image
-                    src={result.image || "/placeholder.svg"}
-                    alt={result.name}
+                    src={result.images?.[0]}
+                    alt={result.title}
                     width={60}
                     height={60}
                     className="rounded-md object-cover"
                   />
                   <div className="flex-1">
-                    <h3 className="font-medium text-gray-900">{result.name}</h3>
+                    <h3 className="font-medium text-gray-900">
+                      {result.title}
+                    </h3>
                     <p className="text-sm text-gray-500">{result.category}</p>
                     <p className="text-sm font-semibold text-gray-900">
-                      {formatPrice(result.price)}
+                      {formatPrice(result.lastPrice)}
                     </p>
                   </div>
                 </Link>
@@ -154,5 +149,5 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
         )}
       </DialogContent>
     </Dialog>
-  )
+  );
 }
